@@ -1,8 +1,20 @@
 # OmniChat Harness
 
-**An OpenAI-compatible local LLM server that uses AI chat web UIs as subagents.**
+**An OpenAI-compatible local AI gateway that drives AI chat web UIs through your own browser sessions.**
 
-Point Cursor, Cline, Aider, Continue.dev, or any OpenAI-compatible AI agent at it and get access to ChatGPT, Gemini, Claude, and Perplexity — all through one standard API.
+Point OpenCode, Cursor, Cline, Aider, Continue.dev, or any OpenAI-compatible AI agent at it and route requests to ChatGPT, Gemini, Claude, and Perplexity — all through one local standard API.
+
+> Current status: early developer preview. ChatGPT passthrough and the local TUI are the most tested paths. Multi-provider orchestration is being built out incrementally.
+
+## Highlights
+
+- OpenAI-compatible `/v1/chat/completions` and `/v1/models` endpoints.
+- Browser-backed providers instead of provider APIs.
+- Anonymous ChatGPT support when the public ChatGPT UI allows it.
+- Interactive system browser selection for Chrome/Chromium/Edge.
+- AES-256-GCM encrypted session storage under `data/sessions/`.
+- Terminal dashboard for server/provider/model health.
+- Bun + TypeScript strict + Turborepo workspace.
 
 ---
 
@@ -52,11 +64,22 @@ cd omnichat-harness
 bun install
 ```
 
-### 2. Install Chromium
+### 2. Pick a browser / initialize provider sessions
 
 ```bash
-cd packages/browser
-bun run install-browsers
+bun run session:init chatgpt
+```
+
+The init script detects installed system browsers such as Chrome, Chromium, and Edge. Pick one from the prompt, or pass one explicitly:
+
+```bash
+bun run session:init chatgpt -- --browser chrome
+```
+
+If your system does not have a supported browser available, install Playwright's browser bundle:
+
+```bash
+bunx playwright install chromium
 ```
 
 ### 3. Configure environment
@@ -66,17 +89,17 @@ cp .env.example .env
 # Edit .env — at minimum set OMNI_API_KEY
 ```
 
-### 4. Log in to providers
+### 4. Optional: log in to providers
 
 ```bash
-# Opens a browser window for you to log in manually
+# Opens a browser window for manual login when needed
 bun run session:init
 
 # Or for specific providers
 bun run session:init gemini chatgpt
 ```
 
-This saves encrypted session cookies so the server can reuse them.
+ChatGPT can also run anonymously when its public UI allows chatting without login. Session state is saved encrypted so the server can reuse it.
 
 ### 5. Start the server
 
@@ -93,9 +116,55 @@ You'll see:
     OPENAI_API_KEY=omni-local-dev-key
 ```
 
+For production-style local runs without file watching:
+
+```bash
+bun run start:server
+```
+
+### 6. Watch it from the terminal dashboard
+
+```bash
+OMNI_SERVER_URL=http://localhost:3000 OMNI_API_KEY=omni-local-dev-key bun run start:tui
+```
+
+One-shot smoke check:
+
+```bash
+bun run start:tui -- --once
+```
+
 ---
 
 ## Connecting AI Agents
+
+### OpenCode
+
+Add a local OpenAI-compatible provider pointing at `http://localhost:3000/v1`, then run:
+
+```bash
+opencode run -m omnichat/chatgpt "Hello from my local browser session"
+```
+
+Example provider shape:
+
+```json
+{
+  "provider": {
+    "omnichat": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "OmniChat Harness",
+      "options": {
+        "baseURL": "http://localhost:3000/v1",
+        "apiKey": "omni-local-dev-key"
+      },
+      "models": {
+        "chatgpt": { "name": "ChatGPT Web" }
+      }
+    }
+  }
+}
+```
 
 ### Cursor
 Settings → Models → Add Model:
@@ -235,7 +304,7 @@ Hono API Server :3000
 omnichat-harness/
 ├── apps/
 │   ├── server/          # Hono OpenAI-compatible server
-│   └── dashboard/       # Monitoring dashboard (Phase 6)
+│   └── tui/             # Terminal monitoring dashboard
 ├── packages/
 │   ├── core/            # Types, orchestrator, router
 │   ├── openai-adapter/  # Wire format, SSE, model registry
@@ -264,10 +333,30 @@ Server health, provider statuses, browser pool status.
 
 ---
 
+## Community Exchange checklist
+
+- Public GitHub repo: `https://github.com/ziuus/omnichat-harness`
+- License: MIT
+- Includes: README, `.env.example`, CONTRIBUTING, SECURITY, issue templates, Docker Compose, tests
+- Recommended demo command: `bun run start:tui -- --once`
+
+Suggested short description:
+
+> OpenAI-compatible local gateway that lets coding agents use ChatGPT/Gemini/Claude-style web UIs through your own browser sessions.
+
+Suggested tags:
+
+`opencode`, `openai-compatible`, `browser-automation`, `chatgpt`, `bun`, `typescript`, `ai-agents`
+
+---
+
 ## Important Notes
 
 **Session Management**
 Sessions are saved encrypted to `./data/sessions/`. Re-run `session:init` if a provider stops working.
+
+**No secrets in logs**
+Do not log cookies, browser storage, decrypted sessions, or API keys. Session files and local databases are ignored by git.
 
 **Rate Limits**
 Web UIs have rate limits. The system respects them and marks providers as `rate-limited` automatically. Use `omni-fast` to automatically route around limited providers.
@@ -284,8 +373,10 @@ Web UI selectors can change. If a provider breaks, check `packages/providers/src
 
 ```bash
 bun run dev:server    # Start API server with watch
-bun run dev:dashboard # Start dashboard
+bun run start:server  # Start API server
+bun run start:tui     # Start terminal dashboard
 bun run typecheck     # TypeScript check all packages
+bun test              # Run tests
 bun run db:migrate    # Run database migrations
 bun run session:init  # Re-initialize provider sessions
 ```

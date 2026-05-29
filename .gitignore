@@ -2,7 +2,9 @@ node_modules/
 .turbo/
 dist/
 *.js.map
-tsconfig.tsbuildinfo
+*.tsbuildinfo
+*.log
+*.pid
 
 # Data — never commit sessions or the database
 data/
@@ -17,6 +19,12 @@ data/
 # Playwright
 playwright-report/
 test-results/
+
+# Local debugging artifacts
+chatgpt_anonymous.html
+dump_html.ts
+test-chatgpt-page*.ts
+test-getLaunchOptions.ts
 
 # OS
 .DS_Store

@@ -13,6 +13,7 @@
     "lint": "turbo lint",
     "typecheck": "turbo typecheck",
     "dev:server": "bun run --cwd apps/server dev",
+    "start:server": "bun run --cwd apps/server start",
     "dev:dashboard": "bun run --cwd apps/dashboard dev",
     "dev:tui": "bun run --cwd apps/tui dev",
     "start:tui": "bun run --cwd apps/tui start",
