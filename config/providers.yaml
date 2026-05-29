@@ -1,0 +1,103 @@
+# Provider capability matrix
+# Used by the router for capability-based task assignment
+
+providers:
+
+  chatgpt:
+    id: chatgpt
+    name: "ChatGPT"
+    url: "https://chatgpt.com"
+    capabilities:
+      - text
+      - code
+      - image-input
+      - image-generation
+      - long-context
+    strengths:
+      - code generation
+      - creative writing
+      - instruction following
+      - broad general knowledge
+    weaknesses:
+      - real-time information (without browsing)
+      - very long documents
+    rate_limits:
+      requests_per_hour: 40
+      messages_per_conversation: 100
+    health_check:
+      interval_ms: 60000
+      timeout_ms: 10000
+
+  gemini:
+    id: gemini
+    name: "Gemini"
+    url: "https://gemini.google.com"
+    capabilities:
+      - text
+      - code
+      - image-input
+      - long-context
+      - search
+    strengths:
+      - extremely long context (1M tokens)
+      - multimodal analysis
+      - factual accuracy
+      - Google Search grounding
+    weaknesses:
+      - creative tasks
+      - nuanced reasoning
+    rate_limits:
+      requests_per_hour: 60
+      messages_per_conversation: 200
+    health_check:
+      interval_ms: 60000
+      timeout_ms: 10000
+
+  claude-web:
+    id: claude-web
+    name: "Claude"
+    url: "https://claude.ai"
+    capabilities:
+      - text
+      - code
+      - image-input
+      - long-context
+      - analysis
+    strengths:
+      - nuanced analysis
+      - long document understanding
+      - safe and careful reasoning
+      - writing quality
+    weaknesses:
+      - real-time information
+      - image generation
+    rate_limits:
+      requests_per_hour: 30
+      messages_per_conversation: 50
+    health_check:
+      interval_ms: 60000
+      timeout_ms: 10000
+
+  perplexity:
+    id: perplexity
+    name: "Perplexity"
+    url: "https://perplexity.ai"
+    capabilities:
+      - text
+      - search
+      - citations
+    strengths:
+      - real-time web search
+      - citations and sources
+      - recent events
+      - fact checking
+    weaknesses:
+      - code generation
+      - long-form content
+      - image tasks
+    rate_limits:
+      requests_per_hour: 50
+      messages_per_conversation: 100
+    health_check:
+      interval_ms: 60000
+      timeout_ms: 10000

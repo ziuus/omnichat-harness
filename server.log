@@ -1,0 +1,220 @@
+
+╔═══════════════════════════════════════╗
+║      OmniChat Harness v0.1.0          ║
+║  OpenAI-compatible multi-agent server ║
+╚═══════════════════════════════════════╝
+
+[Boot] Initializing database...
+[Boot] Database ready: ./data/omnichat.db
+[Boot] Loading model registry...
+[ModelRegistry] Loaded 11 models
+[Boot] 11 models registered
+[Boot] Starting browser pool...
+[BrowserPool] Launching Chromium...
+[BrowserPool] Initializing 4 provider contexts...
+[BrowserContext:gemini] Creating fresh context
+[BrowserContext:chatgpt] Restoring saved session
+[BrowserContext:claude-web] Creating fresh context
+[BrowserContext:perplexity] Creating fresh context
+[BrowserPool] Context ready: gemini
+[BrowserPool] Context ready: claude-web
+[BrowserPool] Context ready: perplexity
+[BrowserPool] Context ready: chatgpt
+[BrowserPool] Ready
+[Boot] Browser pool ready
+[Boot] Initializing providers...
+[ProviderRegistry] Initializing providers...
+[gemini] Initializing...
+[chatgpt] Initializing...
+[claude-web] Initializing...
+[perplexity] Initializing...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[chatgpt] Initialized successfully
+[ProviderRegistry] ✓ chatgpt
+[gemini] Initialization failed: 77 |     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+78 | 
+79 |     // Final check
+80 |     const loggedInAfterWait = await page.$(SEL.userAvatar).then(Boolean);
+81 |     if (!loggedInAfterWait) {
+82 |       throw new Error('[Gemini] Could not verify logged-in state');
+                     ^
+error: [Gemini] Could not verify logged-in state
+      at ensureLoggedIn (/home/zius/Projects/omnichat-harness/packages/providers/src/gemini/GeminiProvider.ts:82:17)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:56:18)
+      at async <anonymous> (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:54:26)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:50:35)
+      at async bootstrap (/home/zius/Projects/omnichat-harness/apps/server/src/index.ts:47:28)
+
+[ProviderRegistry] ✗ gemini — will retry on demand: warn: [Gemini] Could not verify logged-in state
+      at ensureLoggedIn (/home/zius/Projects/omnichat-harness/packages/providers/src/gemini/GeminiProvider.ts:82:17)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:56:18)
+      at async <anonymous> (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:54:26)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:50:35)
+      at async bootstrap (/home/zius/Projects/omnichat-harness/apps/server/src/index.ts:47:28)
+
+[perplexity] Initialization failed: 61 | 
+62 |     // Even without login it works — but log a warning
+63 |     const inputVisible = await page.$(SEL.promptInput).then(Boolean);
+64 |     if (!inputVisible) {
+65 |       this.status = 'session-expired';
+66 |       throw new Error('[Perplexity] Not logged in. Run: bun run session:init perplexity');
+                     ^
+error: [Perplexity] Not logged in. Run: bun run session:init perplexity
+      at ensureLoggedIn (/home/zius/Projects/omnichat-harness/packages/providers/src/perplexity/PerplexityProvider.ts:66:17)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:56:18)
+      at async <anonymous> (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:54:26)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:50:35)
+      at async bootstrap (/home/zius/Projects/omnichat-harness/apps/server/src/index.ts:47:28)
+
+[ProviderRegistry] ✗ perplexity — will retry on demand: warn: [Perplexity] Not logged in. Run: bun run session:init perplexity
+      at ensureLoggedIn (/home/zius/Projects/omnichat-harness/packages/providers/src/perplexity/PerplexityProvider.ts:66:17)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:56:18)
+      at async <anonymous> (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:54:26)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:50:35)
+      at async bootstrap (/home/zius/Projects/omnichat-harness/apps/server/src/index.ts:47:28)
+
+[claude-web] Initialization failed: 82 |     // Wait for network idle and recheck
+83 |     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
+84 | 
+85 |     const inputVisible = await page.$(SEL.promptInput).then(Boolean);
+86 |     if (!inputVisible) {
+87 |       throw new Error('[Claude] Could not verify logged-in state');
+                     ^
+error: [Claude] Could not verify logged-in state
+      at ensureLoggedIn (/home/zius/Projects/omnichat-harness/packages/providers/src/claude-web/ClaudeWebProvider.ts:87:17)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:56:18)
+      at async <anonymous> (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:54:26)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:50:35)
+      at async bootstrap (/home/zius/Projects/omnichat-harness/apps/server/src/index.ts:47:28)
+
+[ProviderRegistry] ✗ claude-web — will retry on demand: warn: [Claude] Could not verify logged-in state
+      at ensureLoggedIn (/home/zius/Projects/omnichat-harness/packages/providers/src/claude-web/ClaudeWebProvider.ts:87:17)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:56:18)
+      at async <anonymous> (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:54:26)
+      at async initialize (/home/zius/Projects/omnichat-harness/packages/providers/src/ProviderRegistry.ts:50:35)
+      at async bootstrap (/home/zius/Projects/omnichat-harness/apps/server/src/index.ts:47:28)
+
+[ProviderRegistry] Done. 4/4 healthy
+[Boot] Providers ready
+
+[Boot] Server starting on port 3112...
+
+✓ OmniChat Harness running at http://localhost:3112
+
+  Point your AI agent at:
+    OPENAI_BASE_URL=http://localhost:3112/v1
+    OPENAI_API_KEY=omni-local-dev-key
+
+  Available endpoints:
+    GET  http://localhost:3112/v1/models
+    POST http://localhost:3112/v1/chat/completions
+    GET  http://localhost:3112/health
+
+<-- POST /v1/chat/completions
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[Retry] Attempt 1 failed, waiting 2604ms...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[Retry] Attempt 2 failed, waiting 4124ms...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+--> POST /v1/chat/completions [31m500[0m 12s
+<-- POST /v1/chat/completions
+--> POST /v1/chat/completions [32m200[0m 13ms
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[Retry] Attempt 1 failed, waiting 2450ms...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[Retry] Attempt 2 failed, waiting 4793ms...
+[Bun.serve]: request timed out after 10 seconds. Pass `idleTimeout` to configure.
+[chat-completions] Execution error: 55 | 
+56 |   protected async ensureLoggedIn(page: Page): Promise<void> {
+57 |     const currentUrl = page.url();
+58 | 
+59 |     if (!currentUrl.includes('chatgpt.com') && !currentUrl.includes('chat.openai.com')) {
+60 |       await page.goto(this.baseUrl, { waitUntil: 'domcontentloaded' });
+                      ^
+error: goto: net::ERR_NETWORK_CHANGED at https://chatgpt.com/
+Call log:
+[2m  - navigating to "https://chatgpt.com/", waiting until "domcontentloaded"[22m
+
+      at ensureLoggedIn (/home/zius/Projects/omnichat-harness/packages/providers/src/chatgpt/ChatGPTProvider.ts:60:18)
+      at _ask (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:156:18)
+      at withRetry (/home/zius/Projects/omnichat-harness/packages/browser/src/HumanDelay.ts:71:20)
+      at processTicksAndRejections (native:7:39)
+
+<-- POST /v1/chat/completions
+--> POST /v1/chat/completions [32m200[0m 6ms
+[Retry] Attempt 1 failed, waiting 2419ms...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[Retry] Attempt 2 failed, waiting 4690ms...
+<-- POST /v1/chat/completions
+--> POST /v1/chat/completions [32m200[0m 4ms
+[Retry] Attempt 1 failed, waiting 2906ms...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[chat-completions] Execution error: 107 |     // Find input
+108 |     let inputEl = await page.$(SEL.promptInput);
+109 |     if (!inputEl) {
+110 |       inputEl = await page.$(SEL.promptInputAlt);
+111 |     }
+112 |     if (!inputEl) throw new Error('[ChatGPT] Prompt textarea not found');
+                                  ^
+error: [ChatGPT] Prompt textarea not found
+      at submitPrompt (/home/zius/Projects/omnichat-harness/packages/providers/src/chatgpt/ChatGPTProvider.ts:112:29)
+      at _ask (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:165:34)
+      at withRetry (/home/zius/Projects/omnichat-harness/packages/browser/src/HumanDelay.ts:71:20)
+      at processTicksAndRejections (unknown:7:39)
+
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[Retry] Attempt 2 failed, waiting 4761ms...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[chat-completions] Execution error: 107 |     // Find input
+108 |     let inputEl = await page.$(SEL.promptInput);
+109 |     if (!inputEl) {
+110 |       inputEl = await page.$(SEL.promptInputAlt);
+111 |     }
+112 |     if (!inputEl) throw new Error('[ChatGPT] Prompt textarea not found');
+                                  ^
+error: [ChatGPT] Prompt textarea not found
+      at submitPrompt (/home/zius/Projects/omnichat-harness/packages/providers/src/chatgpt/ChatGPTProvider.ts:112:29)
+      at _ask (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:165:34)
+      at withRetry (/home/zius/Projects/omnichat-harness/packages/browser/src/HumanDelay.ts:71:20)
+      at processTicksAndRejections (unknown:7:39)
+
+<-- POST /v1/chat/completions
+--> POST /v1/chat/completions [32m200[0m 4ms
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[Retry] Attempt 1 failed, waiting 2161ms...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[Retry] Attempt 2 failed, waiting 4308ms...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[chat-completions] Execution error: 107 |     // Find input
+108 |     let inputEl = await page.$(SEL.promptInput);
+109 |     if (!inputEl) {
+110 |       inputEl = await page.$(SEL.promptInputAlt);
+111 |     }
+112 |     if (!inputEl) throw new Error('[ChatGPT] Prompt textarea not found');
+                                  ^
+error: [ChatGPT] Prompt textarea not found
+      at submitPrompt (/home/zius/Projects/omnichat-harness/packages/providers/src/chatgpt/ChatGPTProvider.ts:112:29)
+      at _ask (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:165:34)
+      at withRetry (/home/zius/Projects/omnichat-harness/packages/browser/src/HumanDelay.ts:71:20)
+      at processTicksAndRejections (unknown:7:39)
+
+<-- POST /v1/chat/completions
+--> POST /v1/chat/completions [32m200[0m 4ms
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[Retry] Attempt 1 failed, waiting 2727ms...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[Retry] Attempt 2 failed, waiting 4361ms...
+[ChatGPT] Prompt input not visible immediately during login check, proceeding anyway
+[chat-completions] Execution error: 107 |     // Find input
+108 |     let inputEl = await page.$(SEL.promptInput);
+109 |     if (!inputEl) {
+110 |       inputEl = await page.$(SEL.promptInputAlt);
+111 |     }
+112 |     if (!inputEl) throw new Error('[ChatGPT] Prompt textarea not found');
+                                  ^
+error: [ChatGPT] Prompt textarea not found
+      at submitPrompt (/home/zius/Projects/omnichat-harness/packages/providers/src/chatgpt/ChatGPTProvider.ts:112:29)
+      at _ask (/home/zius/Projects/omnichat-harness/packages/providers/src/base/BaseProvider.ts:165:34)
+      at withRetry (/home/zius/Projects/omnichat-harness/packages/browser/src/HumanDelay.ts:71:20)
+      at processTicksAndRejections (unknown:7:39)
+

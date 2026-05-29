@@ -1,0 +1,30 @@
+{
+  "name": "omnichat-harness",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "bun@1.3.14",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "dev:server": "bun run --cwd apps/server dev",
+    "dev:dashboard": "bun run --cwd apps/dashboard dev",
+    "dev:tui": "bun run --cwd apps/tui dev",
+    "start:tui": "bun run --cwd apps/tui start",
+    "db:migrate": "bun run --cwd packages/db migrate",
+    "db:studio": "bun run --cwd packages/db studio",
+    "session:init": "bun run scripts/session-init.ts",
+    "health": "bun run scripts/health-check.ts"
+  },
+  "devDependencies": {
+    "turbo": "^2.0.0",
+    "typescript": "^5.4.0",
+    "@types/bun": "latest",
+    "playwright": "^1.44.0"
+  }
+}

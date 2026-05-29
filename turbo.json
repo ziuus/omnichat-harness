@@ -1,0 +1,32 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "globalEnv": [
+    "NODE_ENV",
+    "PORT",
+    "DATABASE_URL",
+    "REDIS_URL",
+    "OMNI_API_KEY",
+    "OMNI_MIDDLEMAN_TYPE",
+    "OMNI_MIDDLEMAN_API_KEY",
+    "OMNI_MIDDLEMAN_BASE_URL",
+    "OMNI_MIDDLEMAN_MODEL",
+    "OMNI_SERVER_URL",
+    "OMNI_TUI_REFRESH_MS",
+    "OPENAI_API_KEY",
+    "ANTHROPIC_API_KEY"
+  ],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {},
+    "typecheck": {
+      "dependsOn": ["^build"]
+    }
+  }
+}

@@ -1,0 +1,23 @@
+node_modules/
+.turbo/
+dist/
+*.js.map
+tsconfig.tsbuildinfo
+
+# Data — never commit sessions or the database
+data/
+*.db
+*.db-shm
+*.db-wal
+
+# Environment
+.env
+.env.local
+
+# Playwright
+playwright-report/
+test-results/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "baseUrl": ".",
+    "paths": {
+      "@omni/browser": ["packages/browser/src/index.ts"],
+      "@omni/core": ["packages/core/src/index.ts"],
+      "@omni/db": ["packages/db/src/index.ts"],
+      "@omni/openai-adapter": ["packages/openai-adapter/src/index.ts"],
+      "@omni/providers": ["packages/providers/src/index.ts"],
+      "@omni/queue": ["packages/queue/src/index.ts"],
+      "playwright": ["node_modules/.bun/playwright@1.60.0/node_modules/playwright"]
+    },
+    "lib": ["ES2022"],
+    "strict": true,
+    "exactOptionalPropertyTypes": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "composite": true,
+    "incremental": true
+  }
+}

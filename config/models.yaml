@@ -1,0 +1,124 @@
+# OmniChat Harness — Model Registry
+# Model name is the routing key for all AI agents connecting via OpenAI protocol
+
+models:
+
+  # ─────────────────────────────────────────────
+  # MODE 1: SELF-ORCHESTRATED
+  # OmniChat internally plans, dispatches, synthesizes
+  # ─────────────────────────────────────────────
+
+  - id: omni-research
+    mode: self-orchestrated
+    name: "OmniChat Research"
+    description: "Deep multi-provider research with citations and synthesis"
+    context_window: 32000
+    routing:
+      strategy: parallel
+      providers: [gemini, perplexity, claude-web, chatgpt]
+      roles:
+        gemini: researcher
+        perplexity: citations
+        claude-web: analyst
+        chatgpt: explainer
+      synthesis: internal
+
+  - id: omni-code
+    mode: self-orchestrated
+    name: "OmniChat Code"
+    description: "Multi-provider code generation, review, and explanation"
+    context_window: 32000
+    routing:
+      strategy: parallel
+      providers: [chatgpt, claude-web, gemini]
+      roles:
+        chatgpt: generator
+        claude-web: reviewer
+        gemini: explainer
+      synthesis: internal
+
+  - id: omni-consensus
+    mode: self-orchestrated
+    name: "OmniChat Consensus"
+    description: "All providers in parallel, majority consensus synthesis"
+    context_window: 16000
+    routing:
+      strategy: all-parallel
+      synthesis: consensus
+
+  - id: omni-fast
+    mode: self-orchestrated
+    name: "OmniChat Fast"
+    description: "Routes to the fastest currently available provider"
+    context_window: 16000
+    routing:
+      strategy: fastest
+      providers: [chatgpt, gemini, claude-web, perplexity]
+
+  - id: omni-image
+    mode: self-orchestrated
+    name: "OmniChat Vision"
+    description: "Multi-provider image analysis and understanding"
+    context_window: 16000
+    routing:
+      strategy: parallel
+      providers: [chatgpt, gemini, claude-web]
+      roles:
+        chatgpt: ocr-and-description
+        gemini: deep-analysis
+        claude-web: critique
+      synthesis: internal
+
+  # ─────────────────────────────────────────────
+  # MODE 2: DIRECT PASSTHROUGH
+  # Prompt goes directly to one provider's web UI
+  # ─────────────────────────────────────────────
+
+  - id: chatgpt
+    mode: passthrough
+    name: "ChatGPT (browser)"
+    description: "Direct access to ChatGPT web UI"
+    context_window: 128000
+    provider: chatgpt
+
+  - id: gemini
+    mode: passthrough
+    name: "Gemini (browser)"
+    description: "Direct access to Gemini web UI — best for long context"
+    context_window: 1000000
+    provider: gemini
+
+  - id: claude-web
+    mode: passthrough
+    name: "Claude (browser)"
+    description: "Direct access to Claude web UI"
+    context_window: 200000
+    provider: claude-web
+
+  - id: perplexity
+    mode: passthrough
+    name: "Perplexity (browser)"
+    description: "Direct access to Perplexity — best for real-time search"
+    context_window: 16000
+    provider: perplexity
+
+  # ─────────────────────────────────────────────
+  # MODE 3: MIDDLEMAN AGENT
+  # User-supplied LLM orchestrates the providers
+  # ─────────────────────────────────────────────
+
+  - id: omni-middleman
+    mode: middleman
+    name: "OmniChat Middleman"
+    description: "Your configured middleman LLM orchestrates all providers"
+    context_window: 32000
+    routing:
+      available_providers: [chatgpt, gemini, claude-web, perplexity]
+
+  - id: omni-middleman-fast
+    mode: middleman
+    name: "OmniChat Middleman (Fast)"
+    description: "Middleman with fast provider subset only"
+    context_window: 16000
+    routing:
+      available_providers: [chatgpt, gemini]
