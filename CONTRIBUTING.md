@@ -1,32 +1,47 @@
-# Contributing
+# Contributing to ziuus Projects
 
-Thanks for helping improve OmniChat Harness.
+Thank you for your interest in contributing! We welcome contributions from the community.
 
-## Local setup
+## Code of Conduct
+This project adheres to a code of conduct. Please be respectful and inclusive.
 
+## Getting Started
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## Development Setup
 ```bash
-bun install
-cp .env.example .env
-bun run session:init chatgpt
-bun run dev:server
+# Clone your fork
+git clone https://github.com/yourusername/project.git
+cd project
+
+# Install dependencies
+npm install
+
+# Run development server
+npm run dev
+
+# Run tests
+npm test
 ```
 
-Use `bun run start:tui -- --once` for a quick dashboard smoke check.
+## Project-Specific Guidelines
+- See project README for specific requirements
+- Follow existing code style and conventions
+- Write tests for new features
+- Update documentation as needed
 
-## Development rules
+## Pull Request Guidelines
+- Ensure tests pass
+- Update documentation
+- Add comments for complex code
+- Reference related issues
 
-- Keep TypeScript strict and avoid `any`.
-- Use ESM `.js` import suffixes in TypeScript source.
-- Do not log cookies, encrypted session payloads, API keys, or browser storage contents.
-- Do not remove human-like browser delays.
-- Keep provider DOM selectors isolated inside provider packages.
-- Treat model names as routing keys.
+## Questions?
+Open an issue or contact the maintainers.
 
-## Checks before a PR
-
-```bash
-bun run typecheck
-bun test
-```
-
-If you change browser automation, test at least one provider manually with `session:init` and an OpenAI-compatible request.
+## License
+By contributing, you agree that your contributions will be licensed under the MIT License.
