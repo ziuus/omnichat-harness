@@ -1,12 +1,13 @@
-# OmniChat Harness
-
 <p align="center">
-  <img src="https://raw.githubusercontent.com/ziuus/omnichat-harness/main/assets/banner.png" alt="OmniChat Harness Banner" width="100%" onerror="this.style.display='none'"/>
+  <img src="https://raw.githubusercontent.com/ziuus/omnichat-harness/main/assets/banner.png" alt="OmniChat - One Gateway. All AI." width="320" style="border-radius: 20px;"/>
 </p>
 
+<h1 align="center">OmniChat Harness</h1>
+
 <p align="center">
-  <strong>Dual-protocol local AI gateway that drives web AI interfaces through headless browser sessions.</strong><br/>
-  Compatible with OpenAI (<code>/v1/chat/completions</code>) and Anthropic (<code>/v1/messages</code>) wire protocols.
+  <strong>One Gateway. All AI.</strong><br/>
+  Dual-protocol local AI gateway that drives web AI interfaces through headless browser sessions.<br/>
+  Drop-in compatible with OpenAI (<code>/v1/chat/completions</code>) and Anthropic (<code>/v1/messages</code>) wire protocols.
 </p>
 
 <p align="center">
