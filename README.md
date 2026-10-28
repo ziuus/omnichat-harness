@@ -10,6 +10,8 @@
 </p>
 
 <p align="center">
+  <a href="https://www.npmjs.com/package/omnichat-harness"><img src="https://img.shields.io/npm/v/omnichat-harness?style=flat-square&color=CB3837&logo=npm" alt="npm version"/></a>
+  <a href="https://github.com/ziuus/omnichat-harness/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/ziuus/omnichat-harness/ci.yml?style=flat-square&logo=github&label=CI" alt="CI Status"/></a>
   <a href="https://bun.sh"><img src="https://img.shields.io/badge/Bun-v1.4+-black?style=flat-square&logo=bun" alt="Bun"/></a>
   <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-Strict-blue?style=flat-square&logo=typescript" alt="TypeScript Strict"/></a>
   <a href="https://turbo.build"><img src="https://img.shields.io/badge/Turborepo-Monorepo-ef4444?style=flat-square&logo=turborepo" alt="Turborepo"/></a>
