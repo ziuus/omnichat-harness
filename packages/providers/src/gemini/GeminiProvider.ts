@@ -108,13 +108,17 @@ export class GeminiProvider extends BaseProvider {
       await this.attachImages(page, options.images);
     }
 
-    // Type the prompt naturally
-    await humanType(
-      { pressSequentially: (text, opts) => page.keyboard.type(text, opts?.delay !== undefined ? { delay: opts.delay } : {}) },
-      prompt,
-    );
+    // Insert prompt fast and naturally
+    if (prompt.length > 60) {
+      await page.keyboard.insertText(prompt);
+    } else {
+      await humanType(
+        { pressSequentially: (text, opts) => page.keyboard.type(text, opts?.delay !== undefined ? { delay: opts.delay } : {}) },
+        prompt,
+      );
+    }
 
-    await humanDelay(200, 500);
+    await humanDelay(150, 300);
 
     // Click send
     const sendBtn = await this.resolveSelector(page, [

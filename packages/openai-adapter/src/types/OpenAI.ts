@@ -3,9 +3,29 @@
 
 // ─── Request ────────────────────────────────────────────────────────────────
 
+export interface ToolDefinition {
+  type: 'function';
+  function: {
+    name: string;
+    description?: string;
+    parameters?: Record<string, any>;
+  };
+}
+
+export interface ToolCall {
+  id: string;
+  type: 'function';
+  function: {
+    name: string;
+    arguments: string; // JSON string
+  };
+}
+
 export interface ChatCompletionRequest {
   model: string;
   messages: OpenAIMessage[];
+  tools?: ToolDefinition[];
+  tool_choice?: 'none' | 'auto' | 'required' | { type: 'function'; function: { name: string } };
   stream?: boolean;
   temperature?: number;
   max_tokens?: number;
@@ -20,9 +40,10 @@ export interface ChatCompletionRequest {
 
 export interface OpenAIMessage {
   role: 'system' | 'user' | 'assistant' | 'tool';
-  content: string | ContentPart[];
+  content: string | ContentPart[] | null;
   name?: string;
   tool_call_id?: string;
+  tool_calls?: ToolCall[];
 }
 
 export interface ContentPart {
@@ -65,9 +86,10 @@ export interface ChatCompletionChoice {
   index: number;
   message: {
     role: 'assistant';
-    content: string;
+    content: string | null;
+    tool_calls?: ToolCall[];
   };
-  finish_reason: 'stop' | 'length' | 'content_filter' | null;
+  finish_reason: 'stop' | 'length' | 'content_filter' | 'tool_calls' | null;
   logprobs: null;
 }
 
@@ -98,13 +120,22 @@ export interface ChatCompletionChunk {
 export interface ChunkChoice {
   index: number;
   delta: MessageDelta;
-  finish_reason: 'stop' | 'length' | 'content_filter' | null;
+  finish_reason: 'stop' | 'length' | 'content_filter' | 'tool_calls' | null;
   logprobs: null;
 }
 
 export interface MessageDelta {
   role?: 'assistant';
   content?: string;
+  tool_calls?: Array<{
+    index: number;
+    id?: string;
+    type?: 'function';
+    function?: {
+      name?: string;
+      arguments?: string;
+    };
+  }>;
 }
 
 // ─── Models ──────────────────────────────────────────────────────────────────

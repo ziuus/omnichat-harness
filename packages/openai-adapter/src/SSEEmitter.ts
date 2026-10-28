@@ -1,7 +1,7 @@
 // packages/openai-adapter/src/SSEEmitter.ts
 // Formats and sends Server-Sent Events in exact OpenAI streaming format
 
-import type { ChatCompletionChunk, ChunkChoice } from './types/OpenAI.js';
+import type { ChatCompletionChunk, ChunkChoice, ToolCall } from './types/OpenAI.js';
 
 interface SSEWriter {
   write(chunk: Uint8Array): Promise<void> | void;
@@ -43,6 +43,40 @@ export class SSEEmitter {
         {
           index: 0,
           delta: { content },
+          finish_reason: null,
+          logprobs: null,
+        },
+      ],
+    };
+
+    await this.write(`data: ${JSON.stringify(chunk)}\n\n`);
+  }
+
+  /**
+   * Send tool calls in streaming delta format.
+   */
+  async sendToolCalls(toolCalls: ToolCall[]): Promise<void> {
+    if (this.closed || !this.writer) return;
+
+    const chunk: ChatCompletionChunk = {
+      id: this.completionId,
+      object: 'chat.completion.chunk',
+      created: Math.floor(Date.now() / 1000),
+      model: this.model,
+      choices: [
+        {
+          index: 0,
+          delta: {
+            tool_calls: toolCalls.map((tc, idx) => ({
+              index: idx,
+              id: tc.id,
+              type: 'function' as const,
+              function: {
+                name: tc.function.name,
+                arguments: tc.function.arguments,
+              },
+            })),
+          },
           finish_reason: null,
           logprobs: null,
         },

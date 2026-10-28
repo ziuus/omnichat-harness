@@ -1,0 +1,32 @@
+{
+  "provider": {
+    "omnichat": {
+      "name": "OmniChat",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "apiKey": "omni-local-dev-key",
+        "baseURL": "http://localhost:3132/v1"
+      },
+      "models": {
+        "chatgpt": {
+          "name": "chatgpt",
+          "limit": {
+            "context": 32000,
+            "output": 4096
+          }
+        }
+      }
+    }
+  },
+  "model": "omnichat/chatgpt",
+  "small_model": "omnichat/chatgpt",
+  "compaction": {
+    "auto": false
+  },
+  "mcp": {
+    "rea": { "enabled": false },
+    "pencil": { "enabled": false },
+    "firecrawl": { "enabled": false },
+    "devfolio": { "enabled": false }
+  }
+}

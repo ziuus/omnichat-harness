@@ -40,17 +40,40 @@ export class ModelRegistry {
   }
 
   /**
-   * Get a model config by ID.
+   * Get a model config by ID, with fuzzy resolution for common model aliases (e.g. gpt-4o, claude-3-5-sonnet).
    */
   get(modelId: string): ModelConfig | undefined {
-    return this.models.get(modelId);
+    if (!modelId) return undefined;
+    const direct = this.models.get(modelId);
+    if (direct) return direct;
+
+    const lower = modelId.toLowerCase().trim();
+    // OpenAI / GPT aliases
+    if (lower.includes('gpt') || lower.includes('o1') || lower.includes('o3') || lower.includes('chatgpt') || lower.includes('davinci')) {
+      return this.models.get('chatgpt');
+    }
+    // Claude / Anthropic aliases
+    if (lower.includes('claude') || lower.includes('sonnet') || lower.includes('opus') || lower.includes('haiku')) {
+      return this.models.get('claude-web');
+    }
+    // Gemini / Google aliases
+    if (lower.includes('gemini') || lower.includes('flash')) {
+      return this.models.get('gemini');
+    }
+    // Perplexity / Sonar aliases
+    if (lower.includes('perplexity') || lower.includes('sonar')) {
+      return this.models.get('perplexity');
+    }
+
+    // Default fallback to chatgpt or first available registered model
+    return this.models.get('chatgpt') ?? this.models.values().next().value;
   }
 
   /**
-   * Check if a model exists.
+   * Check if a model exists (or resolves via alias).
    */
   has(modelId: string): boolean {
-    return this.models.has(modelId);
+    return this.get(modelId) !== undefined;
   }
 
   /**

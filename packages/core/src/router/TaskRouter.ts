@@ -63,6 +63,16 @@ export class TaskRouter {
     const providerId = config.provider!;
 
     if (!healthyIds.includes(providerId)) {
+      if (healthyIds.length > 0) {
+        const fallbackId = healthyIds[0]!;
+        console.warn(`[TaskRouter] Requested provider ${providerId} is not healthy, failing over to healthy provider ${fallbackId}`);
+        return {
+          modelConfig: config,
+          selectedProviders: [fallbackId],
+          strategy: 'direct',
+          executionMode: 'passthrough',
+        };
+      }
       throw new Error(
         `Provider ${providerId} is unavailable. Status: unhealthy`
       );

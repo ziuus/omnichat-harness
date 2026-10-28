@@ -45,11 +45,9 @@ export async function humanType(
   element: { pressSequentially: (text: string, options?: { delay?: number }) => Promise<void> },
   text: string,
 ): Promise<void> {
-  // Average human typing: 40-80 WPM = 200-400ms per word = ~50-80ms per char
-  // Add occasional pauses for "thinking"
-  await element.pressSequentially(text, {
-    delay: 40 + Math.random() * 60,
-  });
+  // Use fast, natural typing speed
+  const delay = text.length > 80 ? 2 + Math.random() * 4 : 12 + Math.random() * 15;
+  await element.pressSequentially(text, { delay });
 }
 
 export function sleep(ms: number): Promise<void> {
@@ -73,7 +71,7 @@ export async function withRetry<T>(
       lastError = err;
       if (attempt < maxAttempts) {
         const delay = baseDelayMs * Math.pow(2, attempt - 1) + Math.random() * 1000;
-        console.warn(`[Retry] Attempt ${attempt} failed, waiting ${Math.round(delay)}ms...`);
+        console.warn(`[Retry] Attempt ${attempt} failed:`, err);
         await sleep(delay);
       }
     }

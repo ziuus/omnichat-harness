@@ -34,6 +34,8 @@ export class ManagedBrowserContext {
   private _lastUsed: Date = new Date();
   private _requestCount = 0;
 
+  private activePage: Page | null = null;
+
   constructor(options: ManagedContextOptions) {
     this.providerId = options.providerId;
     this.profile = getRandomProfile();
@@ -79,13 +81,50 @@ export class ManagedBrowserContext {
     // Inject stealth scripts on every page
     await this.ctx.addInitScript(STEALTH_INIT_SCRIPT);
 
-    // Intercept and block unnecessary resources to speed up interactions
-    await this.ctx.route('**/*.{png,jpg,jpeg,gif,svg,woff,woff2,ttf,mp4,webm}', (route) => {
-      // Only block on non-image-task providers
-      route.continue();
+    // Intercept and block heavy media & analytics/telemetry to speed up interactions
+    await this.ctx.route('**/*', (route) => {
+      const url = route.request().url();
+      if (
+        url.includes('/events/') ||
+        url.includes('google-analytics') ||
+        url.includes('doubleclick') ||
+        url.includes('statsig') ||
+        url.includes('/telemetry') ||
+        /\.(mp4|webm|mkv|avi)(\?.*)?$/i.test(url)
+      ) {
+        return route.abort();
+      }
+      return route.continue();
     });
 
     this._status = 'idle';
+  }
+
+  /**
+   * Get or reuse a warm persistent page from this context.
+   */
+  async getPage(): Promise<Page> {
+    if (!this.ctx) throw new Error(`Context for ${this.providerId} is not initialized`);
+
+    this._status = 'busy';
+    this._lastUsed = new Date();
+    this._requestCount++;
+
+    if (!this.activePage || this.activePage.isClosed()) {
+      this.activePage = await this.ctx.newPage();
+    }
+
+    return this.activePage;
+  }
+
+  /**
+   * Close the active page so the next request gets a fresh page.
+   */
+  async recyclePage(): Promise<void> {
+    if (this.activePage && !this.activePage.isClosed()) {
+      await this.activePage.close().catch(() => {});
+    }
+    this.activePage = null;
   }
 
   /**
@@ -99,19 +138,7 @@ export class ManagedBrowserContext {
     this._lastUsed = new Date();
     this._requestCount++;
 
-    const page = await this.ctx.newPage();
-
-    // Add human-like behavior
-    await page.setExtraHTTPHeaders({
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-      'Accept-Language': 'en-US,en;q=0.5',
-      'Upgrade-Insecure-Requests': '1',
-      'Sec-Fetch-Dest': 'document',
-      'Sec-Fetch-Mode': 'navigate',
-      'Sec-Fetch-Site': 'none',
-    });
-
-    return page;
+    return this.ctx.newPage();
   }
 
   /**

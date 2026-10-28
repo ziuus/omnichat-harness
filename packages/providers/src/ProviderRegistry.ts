@@ -47,24 +47,22 @@ export class ProviderRegistry {
   async initialize(pool: BrowserPool): Promise<void> {
     console.log('[ProviderRegistry] Initializing providers...');
 
-    const results = await Promise.allSettled(
-      Object.entries(PROVIDER_FACTORIES).map(async ([id, factory]) => {
-        const provider = factory(pool);
-        try {
-          await provider.initialize();
-          this.providers.set(id, provider);
-          console.log(`[ProviderRegistry] ✓ ${id}`);
-        } catch (err) {
-          console.warn(`[ProviderRegistry] ✗ ${id} — will retry on demand:`, err);
-          // Still register it — it can be recovered on first use
-          this.providers.set(id, provider);
-        }
-      })
-    );
+    let healthyCount = 0;
+    for (const [id, factory] of Object.entries(PROVIDER_FACTORIES)) {
+      const provider = factory(pool);
+      try {
+        await provider.initialize();
+        this.providers.set(id, provider);
+        healthyCount++;
+        console.log(`[ProviderRegistry] ✓ ${id}`);
+      } catch (err) {
+        console.warn(`[ProviderRegistry] ✗ ${id} — will retry on demand`);
+        this.providers.set(id, provider);
+      }
+    }
 
-    const failed = results.filter((r) => r.status === 'rejected').length;
     console.log(
-      `[ProviderRegistry] Done. ${this.providers.size - failed}/${this.providers.size} healthy`
+      `[ProviderRegistry] Done. ${healthyCount}/${this.providers.size} healthy`
     );
   }
 

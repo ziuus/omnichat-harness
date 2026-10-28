@@ -23,6 +23,8 @@ export class MessageConverter {
       messages: conversationMessages,
       executionMode: modelConfig.mode,
       modelId: request.model,
+      ...(request.tools && request.tools.length > 0 ? { tools: request.tools } : {}),
+      ...(request.tool_choice ? { toolChoice: request.tool_choice } : {}),
       ...(images.length > 0 ? { images } : {}),
       ...(systemPrompt ? { systemContext: systemPrompt } : {}),
       ...(images.length > 0 ? { requiredCapabilities: ['image-input'] as const } : {}),
@@ -43,6 +45,8 @@ export class MessageConverter {
     if (typeof last.content === 'string') {
       return last.content;
     }
+
+    if (!last.content) return '';
 
     // Handle multi-part content (text + images)
     return last.content
@@ -67,19 +71,22 @@ export class MessageConverter {
         continue;
       }
 
-      if (msg.role === 'tool') continue; // skip tool messages for now
-
-      const textContent =
-        typeof msg.content === 'string'
-          ? msg.content
-          : msg.content
-              .filter((p): p is ContentPart & { type: 'text' } => p.type === 'text')
-              .map((p) => p.text ?? '')
-              .join('\n');
+      let textContent = '';
+      if (typeof msg.content === 'string') {
+        textContent = msg.content;
+      } else if (Array.isArray(msg.content)) {
+        textContent = msg.content
+          .filter((p): p is ContentPart & { type: 'text' } => p.type === 'text')
+          .map((p) => p.text ?? '')
+          .join('\n');
+      }
 
       conversationMessages.push({
-        role: msg.role as 'user' | 'assistant',
+        role: msg.role,
         content: textContent,
+        ...(msg.name ? { name: msg.name } : {}),
+        ...(msg.tool_call_id ? { toolCallId: msg.tool_call_id } : {}),
+        ...(msg.tool_calls ? { toolCalls: msg.tool_calls } : {}),
       });
     }
 
@@ -94,7 +101,7 @@ export class MessageConverter {
     const images: ImageRef[] = [];
 
     for (const msg of messages) {
-      if (typeof msg.content === 'string') continue;
+      if (!Array.isArray(msg.content)) continue;
 
       for (const part of msg.content) {
         if (part.type !== 'image_url' || !part.image_url) continue;

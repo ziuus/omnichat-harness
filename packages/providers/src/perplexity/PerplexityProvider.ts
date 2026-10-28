@@ -8,8 +8,8 @@ import { humanDelay, humanType, readDelay, thinkDelay, sleep } from '@omni/brows
 
 const SEL = {
   // Input
-  promptInput:      'textarea[placeholder*="Ask"]',
-  promptInputAlt:   'textarea.overflow-auto',
+  promptInput:      '#ask-input, [contenteditable="true"].composer-editable, textarea[placeholder*="Ask"]',
+  promptInputAlt:   'textarea.overflow-auto, [contenteditable="true"]',
   sendButton:       'button[aria-label="Submit"]',
   sendButtonAlt:    'button[type="submit"]',
 
@@ -82,22 +82,25 @@ export class PerplexityProvider extends BaseProvider {
     await inputEl.click();
     await sleep(100);
 
-    // Clear existing content
-    await inputEl.selectText();
-    await page.keyboard.press('Delete');
+    // Fast, reliable text insertion
+    if (prompt.length > 60) {
+      await page.keyboard.insertText(prompt);
+    } else {
+      await humanType(
+        { pressSequentially: (text, opts) => page.keyboard.type(text, opts?.delay !== undefined ? { delay: opts.delay } : {}) },
+        prompt,
+      );
+    }
 
-    await humanType(
-      { pressSequentially: (text, opts) => page.keyboard.type(text, opts?.delay !== undefined ? { delay: opts.delay } : {}) },
-      prompt,
-    );
+    await humanDelay(150, 300);
 
-    await humanDelay(200, 500);
+    // Submit with Enter or Send button
+    await page.keyboard.press('Enter');
 
-    const sendBtn = await page.$(SEL.sendButton)
-      ?? await page.$(SEL.sendButtonAlt);
-    if (!sendBtn) throw new Error('[Perplexity] Send button not found');
-
-    await sendBtn.click();
+    const sendBtn = await page.$(SEL.sendButton) ?? await page.$(SEL.sendButtonAlt);
+    if (sendBtn) {
+      await sendBtn.click().catch(() => {});
+    }
 
     return this.waitForResponse(page, _options?.timeoutMs ?? 60000);
   }

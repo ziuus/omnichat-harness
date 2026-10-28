@@ -136,7 +136,7 @@ export function readConfig(args: readonly string[] = process.argv.slice(2), env:
 }
 
 function readMode(args: readonly string[], envValue: string | undefined): RuntimeMode {
-  if (args.includes('--once') || envValue === 'true' || envValue === '1') {
+  if (args.includes('--once') || args.includes('--one-shot') || envValue === 'true' || envValue === '1') {
     return 'once';
   }
 

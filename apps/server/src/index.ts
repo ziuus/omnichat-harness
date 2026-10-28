@@ -58,6 +58,7 @@ async function bootstrap() {
   Bun.serve({
     port,
     fetch: app.fetch,
+    idleTimeout: 255,
   });
 
   console.log(`✓ OmniChat Harness running at http://localhost:${port}`);

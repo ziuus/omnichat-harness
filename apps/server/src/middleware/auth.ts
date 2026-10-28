@@ -13,14 +13,16 @@ export const authMiddleware: MiddlewareHandler = async (c, next) => {
   }
 
   const authHeader = c.req.header('Authorization');
-  if (!authHeader) {
+  const xApiKey = c.req.header('x-api-key');
+
+  if (!authHeader && !xApiKey) {
     return c.json(
-      { error: { message: 'Missing Authorization header', type: 'auth_error', code: 'missing_api_key', param: null } },
+      { error: { message: 'Missing Authorization or x-api-key header', type: 'auth_error', code: 'missing_api_key', param: null } },
       401,
     );
   }
 
-  const token = authHeader.replace(/^Bearer\s+/i, '');
+  const token = xApiKey || authHeader?.replace(/^Bearer\s+/i, '');
   if (token !== apiKey) {
     return c.json(
       { error: { message: 'Invalid API key', type: 'auth_error', code: 'invalid_api_key', param: null } },

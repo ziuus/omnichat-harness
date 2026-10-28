@@ -46,10 +46,10 @@ export class BrowserPool {
 
     console.log(`[BrowserPool] Initializing ${providerIds.length} provider contexts...`);
 
-    // Initialize contexts in parallel
-    await Promise.all(
-      providerIds.map((id) => this.initContext(id))
-    );
+    // Initialize contexts sequentially to avoid network/CPU contention
+    for (const id of providerIds) {
+      await this.initContext(id);
+    }
 
     // Start health check loop
     this.startHealthChecks();

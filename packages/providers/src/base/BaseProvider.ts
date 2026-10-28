@@ -21,9 +21,32 @@ export abstract class BaseProvider implements Provider {
 
   protected context: ManagedBrowserContext;
   protected status: ProviderStatus = 'initializing';
+  private requestQueue: Array<() => void> = [];
+  private isProcessing = false;
 
   constructor(context: ManagedBrowserContext) {
     this.context = context;
+  }
+
+  private async acquireLock(): Promise<() => void> {
+    return new Promise((resolve) => {
+      const execute = () => {
+        this.isProcessing = true;
+        resolve(() => {
+          this.isProcessing = false;
+          const next = this.requestQueue.shift();
+          if (next) {
+            next();
+          }
+        });
+      };
+
+      if (!this.isProcessing) {
+        execute();
+      } else {
+        this.requestQueue.push(execute);
+      }
+    });
   }
 
   // ─── Abstract methods each provider must implement ─────────────────────────
@@ -84,11 +107,16 @@ export abstract class BaseProvider implements Provider {
   }
 
   async ask(prompt: string, options?: AskOptions): Promise<ProviderResponse> {
-    return withRetry(
-      () => this._ask(prompt, options),
-      3,
-      2000,
-    );
+    const release = await this.acquireLock();
+    try {
+      return await withRetry(
+        () => this._ask(prompt, options),
+        3,
+        2000,
+      );
+    } finally {
+      release();
+    }
   }
 
   async newConversation(): Promise<string> {
@@ -150,7 +178,7 @@ export abstract class BaseProvider implements Provider {
 
   private async _ask(prompt: string, options?: AskOptions): Promise<ProviderResponse> {
     const startTime = Date.now();
-    const page = await this.context.newPage();
+    const page = await this.context.getPage();
 
     try {
       await this.ensureLoggedIn(page);
@@ -159,8 +187,8 @@ export abstract class BaseProvider implements Provider {
         await this.navigateToConversation(page, options.conversationId);
       }
 
-      // Human-like pause before typing
-      await humanDelay(400, 900);
+      // Small natural pause before typing
+      await humanDelay(150, 300);
 
       const content = await this.submitPrompt(page, prompt, options);
 
@@ -182,6 +210,7 @@ export abstract class BaseProvider implements Provider {
 
       return response;
     } catch (err) {
+      await this.context.recyclePage().catch(() => {});
       const message = err instanceof Error ? err.message : String(err);
 
       // Classify the error and update status
@@ -197,7 +226,6 @@ export abstract class BaseProvider implements Provider {
       this.status = 'degraded';
       throw err;
     } finally {
-      await page.close();
       this.context.markIdle();
     }
   }

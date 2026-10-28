@@ -9,17 +9,17 @@ import { humanDelay, humanType, readDelay, thinkDelay, sleep } from '@omni/brows
 // ─── Selectors ─────────────────────────────────────────────────────────────
 const SEL = {
   // Input
-  promptInput:       '#prompt-textarea',
-  promptInputAlt:    'div[contenteditable="true"][data-id="root"]',
-  sendButton:        'button[data-testid="send-button"]',
-  sendButtonAlt:     'button[aria-label="Send prompt"]',
-  stopButton:        'button[aria-label="Stop streaming"]',
+  promptInput:       '#prompt-textarea, #mobile-composer-prompt, textarea[placeholder*="Ask ChatGPT"], textarea[placeholder*="Message"], textarea',
+  promptInputAlt:    'div[contenteditable="true"][data-id="root"], div[contenteditable="true"]',
+  sendButton:        'button[data-testid="send-button"], button[aria-label="Send prompt"], button[aria-label="Send message"], button[aria-label*="Send"]',
+  sendButtonAlt:     'button[aria-label="Send prompt"], button[aria-label="Send message"]',
+  stopButton:        'button[data-testid="stop-button"], button[data-testid*="stop"], button[aria-label*="Stop"], button[aria-label*="stop"]',
 
   // Response
-  // ChatGPT uses data-message-author-role="assistant"
-  assistantMessages: '[data-message-author-role="assistant"]',
+  // ChatGPT uses data-message-role="assistant" or data-message-author-role="assistant"
+  assistantMessages: '[data-message-author-role="assistant"], [data-message-role="assistant"]',
   streamingCursor:   '.result-streaming',
-  streamingIndicator:'[data-testid="stop-button"]', // stop button = currently streaming
+  streamingIndicator:'button[data-testid="stop-button"], button[data-testid*="stop"], button[aria-label*="Stop"], button[aria-label*="stop"]', // stop button = currently streaming
 
   // Auth
   loginButton:       'button[data-testid="login-button"]',
@@ -104,35 +104,120 @@ export class ChatGPTProvider extends BaseProvider {
     prompt: string,
     options?: AskOptions,
   ): Promise<string> {
+    // If starting a fresh chat and page already has messages or is on a subpath, reset to root
+    if (!options?.conversationId) {
+      const hasPriorMessages = (await page.$$(SEL.assistantMessages)).length > 0;
+      if (hasPriorMessages || page.url().includes('/c/') || page.url().includes('conversation')) {
+        const newChatBtn = await page.$(SEL.newChatSidebar) ?? await page.$(SEL.newChatAlt);
+        if (newChatBtn) {
+          await newChatBtn.click().catch(() => {});
+          await page.waitForFunction('!window.location.pathname.includes("/c/")', { timeout: 5000 }).catch(() => {});
+          await sleep(200);
+        } else {
+          await page.goto(this.baseUrl, { waitUntil: 'domcontentloaded' }).catch(() => {});
+          await sleep(2500);
+        }
+      }
+    }
+
+    // Dismiss any modal dialog (e.g. mobile-auth-dialog) that might intercept input
+    await page.evaluate(() => {
+      const doc = (globalThis as any).document;
+      const dialogs = doc?.querySelectorAll('dialog[open], #mobile-auth-dialog');
+      dialogs?.forEach((d: any) => {
+        try { d.close(); } catch {}
+        d.remove();
+      });
+    }).catch(() => {});
+
+    // Wait for input to be mounted and visible
+    await page.waitForSelector(SEL.promptInput, { state: 'visible', timeout: 15000 }).catch(() => {});
+
     // Find input
     let inputEl = await page.$(SEL.promptInput);
     if (!inputEl) {
       inputEl = await page.$(SEL.promptInputAlt);
     }
-    if (!inputEl) throw new Error('[ChatGPT] Prompt textarea not found');
+    if (!inputEl) {
+      await page.screenshot({ path: 'chatgpt-error-noinput.png' }).catch(() => {});
+      throw new Error('[ChatGPT] Prompt textarea not found');
+    }
 
     // Handle images before typing
     if (options?.images?.length) {
       await this.attachImages(page, options.images);
     }
 
-    // Click + type
+    // Focus input and clear any residual draft
     await inputEl.click();
     await sleep(100);
-    await humanType(
-      { pressSequentially: (text, opts) => page.keyboard.type(text, opts?.delay !== undefined ? { delay: opts.delay } : {}) },
-      prompt,
-    );
-    await humanDelay(200, 600);
+    await page.keyboard.press('Control+A');
+    await page.keyboard.press('Backspace');
+    await sleep(100);
 
-    // Submit
-    const sendBtn = await page.$(SEL.sendButton)
-      ?? await page.$(SEL.sendButtonAlt);
-    if (!sendBtn) throw new Error('[ChatGPT] Send button not found');
+    // Fast, reliable text insertion with React event triggering for all prompt lengths
+    await page.keyboard.insertText(prompt);
+    await page.keyboard.type(' ');
+    await page.keyboard.press('Backspace');
+    await humanDelay(150, 300);
 
-    await sendBtn.click();
+    // Verify textarea actually contains text; if not, re-insert
+    let val = await inputEl.evaluate((el: any) => el.value || el.innerText || '').catch(() => '');
+    if (!val || val.length === 0) {
+      await inputEl.click();
+      await sleep(100);
+      await page.keyboard.insertText(prompt);
+      await page.keyboard.type(' ');
+      await page.keyboard.press('Backspace');
+      await sleep(300);
+    }
 
-    return this.waitForResponse(page, options?.timeoutMs ?? 180000);
+    // Record initial message count to detect when new response arrives
+    const initialMessageCount = (await page.$$(SEL.assistantMessages)).length;
+
+    // Look for enabled send button, with wait for React state to update
+    const sendBtn = await page.waitForSelector(
+      'button[data-testid="send-button"]:not([disabled]), button[aria-label="Send message"]:not([disabled]), button[aria-label*="Send"]:not([disabled])',
+      { timeout: 5000 }
+    ).catch(() => null);
+
+    if (sendBtn) {
+      console.log('[ChatGPT] Send button found, clicking via coordinate center');
+      const box = await sendBtn.boundingBox().catch(() => null);
+      if (box) {
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2).catch(() => {});
+      } else {
+        await sendBtn.click().catch(() => {});
+      }
+    }
+    await inputEl.focus().catch(() => {});
+    await page.keyboard.press('Enter').catch(() => {});
+
+    // Confirm submission started; if textarea still holds prompt after 1.5s and no stop button, re-click
+    await sleep(1500);
+    const stopSeenEarly = await page.$(SEL.stopButton).catch(() => null);
+    if (!stopSeenEarly) {
+      const remainingVal = await inputEl.evaluate((el: any) => (el.value || el.innerText || '').trim()).catch(() => '');
+      if (remainingVal.length > 0) {
+        console.log('[ChatGPT] Input still has text after initial click, re-clicking send button');
+        const retryBtn = await page.$('button[aria-label="Send message"], button[aria-label*="Send"], button[data-testid="send-button"]').catch(() => null);
+        if (retryBtn) {
+          const retryBox = await retryBtn.boundingBox().catch(() => null);
+          if (retryBox) {
+            await page.mouse.click(retryBox.x + retryBox.width / 2, retryBox.y + retryBox.height / 2).catch(() => {});
+          } else {
+            await retryBtn.click().catch(() => {});
+          }
+        }
+        await inputEl.focus().catch(() => {});
+        await page.keyboard.press('Enter').catch(() => {});
+      }
+    }
+
+    await sleep(500);
+    await page.screenshot({ path: 'chatgpt-debug-after-submit.png' }).catch(() => {});
+
+    return this.waitForResponse(page, options?.timeoutMs ?? 180000, initialMessageCount);
   }
 
   protected async createNewConversation(page: Page): Promise<string> {
@@ -170,32 +255,91 @@ export class ChatGPTProvider extends BaseProvider {
 
   // ─── Private ───────────────────────────────────────────────────────────────
 
-  private async waitForResponse(page: Page, timeoutMs: number): Promise<string> {
-    const deadline = Date.now() + timeoutMs;
+  private async waitForResponse(page: Page, timeoutMs: number, initialMessageCount = 0): Promise<string> {
+    const startTime = Date.now();
+    console.log(`[ChatGPT] Waiting for response to start (initial count: ${initialMessageCount})...`);
 
-    // Wait for stop button to appear (streaming started)
-    await page.waitForSelector(SEL.streamingIndicator, {
-      state: 'visible',
-      timeout: 30000,
-    }).catch(() => {
-      // May have responded immediately
-    });
+    // 1. Wait for streaming to start OR for actual assistant text to appear
+    let stopButtonSeen = false;
+    const startWait = Date.now();
+    while (Date.now() - startWait < 25000) {
+      const stopVisible = await page.isVisible(SEL.stopButton).catch(() => false);
+      if (stopVisible) {
+        stopButtonSeen = true;
+        break;
+      }
 
-    await thinkDelay();
+      // Check if actual assistant text beyond "ChatGPT said:" has appeared
+      const hasActualContent = await page.evaluate(({ sel }: { sel: string }) => {
+        const doc = (globalThis as any).document;
+        const messages = doc?.querySelectorAll(sel);
+        if (!messages || messages.length === 0) return false;
+        const last = messages[messages.length - 1];
+        const md = last?.querySelector?.('[data-assistant-markdown], .markdown');
+        const text = (md?.innerText || md?.textContent || last?.innerText || last?.textContent || '')
+          .replace(/^(?:ChatGPT said:\s*|ChatGPT\s*:\s*|ChatGPT\s*)/i, '')
+          .trim();
+        return text.length > 0;
+      }, { sel: SEL.assistantMessages }).catch(() => false);
 
-    // Wait for streaming to end (stop button disappears)
-    await page.waitForSelector(SEL.streamingIndicator, {
-      state: 'hidden',
-      timeout: timeoutMs,
-    }).catch(() => {});
+      if (hasActualContent) {
+        break;
+      }
+      await sleep(300);
+    }
 
-    // Also wait for the streaming cursor to disappear
-    await page.waitForSelector(SEL.streamingCursor, {
-      state: 'hidden',
-      timeout: 10000,
-    }).catch(() => {});
+    if (stopButtonSeen) {
+      console.log('[ChatGPT] Streaming started (stop button visible)');
+      await page.waitForSelector(SEL.stopButton, { state: 'hidden', timeout: timeoutMs }).catch(() => {});
+      console.log('[ChatGPT] Streaming completed (stop button hidden)');
+    } else {
+      console.log('[ChatGPT] Stop button not observed, proceeding to stability check');
+    }
 
-    await sleep(500); // Settle time
+    // 2. Text stability check: ensure CLEANED text length > 0 and hasn't changed for at least 1500ms
+    let lastText = '';
+    let stableCycles = 0;
+    const pollIntervalMs = 500;
+    const requiredStableCycles = 3; // 3 x 500ms = 1.5s stable
+
+    while (Date.now() - startTime < timeoutMs) {
+      const currentText = await page.evaluate(({ sel }: { sel: string }) => {
+        const doc = (globalThis as any).document;
+        const messages = doc?.querySelectorAll(sel);
+        if (!messages || messages.length === 0) return '';
+        const last = messages[messages.length - 1];
+        const md = last?.querySelector?.('[data-assistant-markdown], .markdown');
+        const mdText = (md?.innerText || md?.textContent || '').trim();
+        if (mdText.length > 0) return mdText;
+        return (last?.innerText || last?.textContent || '').trim();
+      }, { sel: SEL.assistantMessages }).catch(() => '');
+
+      const cleanText = this.cleanResponse(currentText);
+      const stopStillVisible = await page.isVisible(SEL.stopButton).catch(() => false);
+
+      // CRITICAL: We only consider the response stable if:
+      // 1. Cleaned text length > 0 (not just "ChatGPT said:")
+      // 2. Stop button is not visible
+      if (cleanText.length > 0 && !stopStillVisible) {
+        if (cleanText === lastText) {
+          stableCycles++;
+          if (stableCycles >= requiredStableCycles) {
+            break;
+          }
+        } else {
+          lastText = cleanText;
+          stableCycles = 0;
+        }
+      } else {
+        stableCycles = 0;
+      }
+
+      await sleep(pollIntervalMs);
+    }
+
+    if (stableCycles < requiredStableCycles) {
+      console.warn(`[ChatGPT] Stability loop ended without reaching ${requiredStableCycles} cycles (stableCycles=${stableCycles})`);
+    }
 
     // Check for rate limit after response
     if (await this.detectRateLimit(page)) {
@@ -208,11 +352,29 @@ export class ChatGPTProvider extends BaseProvider {
 
   private async extractLatestResponse(page: Page): Promise<string> {
     const messages = await page.$$(SEL.assistantMessages);
-    if (messages.length === 0) throw new Error('[ChatGPT] No assistant messages found');
+    if (messages.length === 0) {
+      await page.screenshot({ path: 'chatgpt-debug-nomessages.png' }).catch(() => {});
+      const articles = await page.$$eval('article', (els) => els.map(e => e.outerHTML.slice(0, 200))).catch(() => []);
+      console.warn('[ChatGPT] Found 0 assistant messages. Articles on page:', articles);
+      throw new Error('[ChatGPT] No assistant messages found');
+    }
 
     const lastMessage = messages[messages.length - 1]!;
-    const text = await lastMessage.innerText();
-    return this.cleanResponse(text ?? '');
+
+    const text = await lastMessage.evaluate((el: any) => {
+      const md = el.querySelector('[data-assistant-markdown], .markdown');
+      const mdText = (md?.innerText || md?.textContent || '').trim();
+      if (mdText.length > 0) return mdText;
+      return (el.innerText || el.textContent || '').trim();
+    });
+
+    const cleaned = this.cleanResponse(text ?? '');
+    console.log(`[ChatGPT] Extracted response length: ${cleaned.length}, preview: "${cleaned.slice(0, 80)}"`);
+    if (!cleaned || cleaned.length === 0) {
+      await page.screenshot({ path: 'chatgpt-debug-emptyresponse.png' }).catch(() => {});
+      throw new Error('[ChatGPT] Extracted response was empty or contained only accessibility header');
+    }
+    return cleaned;
   }
 
   private async attachImages(
@@ -257,7 +419,7 @@ export class ChatGPTProvider extends BaseProvider {
 
   private cleanResponse(text: string): string {
     return text
-      .replace(/^ChatGPT\s*/i, '')
+      .replace(/^(?:ChatGPT said:\s*|ChatGPT\s*:\s*|ChatGPT\s*)/i, '')
       .replace(/^(Copy code|Copy)\s*/gm, '')
       .trim();
   }

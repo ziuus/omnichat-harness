@@ -26,5 +26,6 @@
     "sourceMap": true,
     "composite": true,
     "incremental": true
-  }
+  },
+  "exclude": ["test-agent-workspace", "test-opencode-workspace"]
 }

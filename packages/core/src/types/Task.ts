@@ -40,11 +40,18 @@ export interface TaskInput {
   executionMode: ExecutionMode;
   /** The raw model name from the API request */
   modelId: string;
+  /** Available function/tool calling schemas */
+  tools?: any[];
+  /** Tool choice directive ('auto', 'required', 'none', or specific function) */
+  toolChoice?: any;
 }
 
 export interface ConversationMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: 'system' | 'user' | 'assistant' | 'tool';
   content: string;
+  name?: string;
+  toolCallId?: string;
+  toolCalls?: any[];
 }
 
 export interface ImageRef {
