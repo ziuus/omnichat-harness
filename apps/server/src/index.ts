@@ -18,7 +18,7 @@ async function bootstrap() {
   console.log('');
   console.log('╔═══════════════════════════════════════╗');
   console.log('║      OmniChat Harness v0.1.0          ║');
-  console.log('║  OpenAI-compatible multi-agent server ║');
+  console.log('║  Dual OpenAI & Anthropic AI Gateway   ║');
   console.log('╚═══════════════════════════════════════╝');
   console.log('');
 
@@ -63,14 +63,16 @@ async function bootstrap() {
 
   console.log(`✓ OmniChat Harness running at http://localhost:${port}`);
   console.log('');
-  console.log('  Point your AI agent at:');
-  console.log(`    OPENAI_BASE_URL=http://localhost:${port}/v1`);
-  console.log(`    OPENAI_API_KEY=${process.env['OMNI_API_KEY'] ?? 'omni-local-dev-key'}`);
+  console.log('  Point your AI agents at:');
+  console.log(`    OpenAI SDK / Cursor / Aider:    OPENAI_BASE_URL=http://localhost:${port}/v1`);
+  console.log(`    Claude Code / Anthropic SDK:    ANTHROPIC_BASE_URL=http://localhost:${port}`);
+  console.log(`    API Key (any format):           API_KEY=${process.env['OMNI_API_KEY'] ?? 'omni-local-dev-key'}`);
   console.log('');
   console.log('  Available endpoints:');
-  console.log(`    GET  http://localhost:${port}/v1/models`);
-  console.log(`    POST http://localhost:${port}/v1/chat/completions`);
-  console.log(`    GET  http://localhost:${port}/health`);
+  console.log(`    POST http://localhost:${port}/v1/chat/completions (OpenAI Chat Completions)`);
+  console.log(`    POST http://localhost:${port}/v1/messages         (Anthropic Messages API)`);
+  console.log(`    GET  http://localhost:${port}/v1/models           (Model Discovery)`);
+  console.log(`    GET  http://localhost:${port}/health             (Health & Provider Status)`);
   console.log('');
 
   process.on('SIGTERM', shutdown);

@@ -118,7 +118,20 @@ OmniChat plans, fans out requests in parallel across multiple providers, and syn
 
 ## Quick Start
 
-### 1. Prerequisites
+### Option A: Instant CLI Run (Zero Setup)
+```bash
+# Start server immediately using bunx or npx
+bunx omnichat start --port 3132
+
+# Or launch the terminal monitoring dashboard
+bunx omnichat tui
+```
+
+---
+
+### Option B: From Source (Recommended for Local Dev)
+
+#### 1. Prerequisites
 - [Bun](https://bun.sh) (v1.1 or higher)
 - Google Chrome, Chromium, or Microsoft Edge installed on your machine
 
@@ -131,7 +144,7 @@ cd omnichat-harness
 bun install
 ```
 
-### 2. Configure Environment
+#### 2. Configure Environment
 ```bash
 cp .env.example .env
 ```
@@ -143,7 +156,7 @@ SESSION_ENCRYPTION_KEY=dev-key-change-in-production!!
 BROWSER_HEADLESS=true
 ```
 
-### 3. Launch the Server
+#### 3. Launch the Server
 ```bash
 # Start server in development mode (with hot reloading)
 bun run dev:server
@@ -156,20 +169,21 @@ You'll see:
 ```text
 ╔═══════════════════════════════════════╗
 ║      OmniChat Harness v0.1.0          ║
-║  OpenAI-compatible multi-agent server ║
+║  Dual OpenAI & Anthropic AI Gateway   ║
 ╚═══════════════════════════════════════╝
 
 ✓ OmniChat Harness running at http://localhost:3132
 
-  Point your AI agent at:
-    OPENAI_BASE_URL=http://localhost:3132/v1
-    OPENAI_API_KEY=omni-local-dev-key
+  Point your AI agents at:
+    OpenAI / Cursor / Aider:   OPENAI_BASE_URL=http://localhost:3132/v1
+    Claude Code / Anthropic:   ANTHROPIC_BASE_URL=http://localhost:3132
+    API Key (any format):      API_KEY=omni-local-dev-key
 
   Available endpoints:
-    POST http://localhost:3132/v1/chat/completions (OpenAI)
-    POST http://localhost:3132/v1/messages         (Anthropic)
-    GET  http://localhost:3132/v1/models           (Discovery)
-    GET  http://localhost:3132/health             (Status)
+    POST http://localhost:3132/v1/chat/completions (OpenAI Chat Completions)
+    POST http://localhost:3132/v1/messages         (Anthropic Messages API)
+    GET  http://localhost:3132/v1/models           (Model Discovery)
+    GET  http://localhost:3132/health             (Health & Provider Status)
 ```
 
 ### 4. Optional: Terminal Dashboard

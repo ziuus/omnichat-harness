@@ -1,0 +1,38 @@
+# Exclude all data, sessions, and databases anywhere
+data
+data/
+*/data/
+*/*/data/
+*.db
+*.db-shm
+*.db-wal
+*.enc
+*/*.db
+*/*/*.db
+*/*/*/*.db
+*/*/*/*.enc
+
+# Exclude build artifacts and logs
+.turbo/
+*/.turbo/
+*/*/.turbo/
+*.tsbuildinfo
+*/*.tsbuildinfo
+*/*/*.tsbuildinfo
+*.log
+*/*.log
+*/*/*.log
+*.pid
+
+# Local workspaces & temporary test runs
+test-agent-workspace/
+test-opencode-workspace/
+playwright-report/
+test-results/
+*.png
+*.html
+
+# Environment
+.env
+.env.*
+
