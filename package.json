@@ -2,8 +2,10 @@
   "name": "omnichat-harness",
   "version": "0.1.0",
   "description": "Dual-protocol local AI gateway compatible with OpenAI and Anthropic APIs driving web AI sessions",
+  "type": "module",
   "bin": {
-    "omnichat": "./bin/omnichat.js"
+    "omnichat": "./bin/omnichat.js",
+    "omnichat-mcp": "./bin/mcp-server.js"
   },
   "packageManager": "bun@1.3.14",
   "repository": {
@@ -52,5 +54,8 @@
     "typescript": "^5.4.0",
     "@types/bun": "latest",
     "playwright": "^1.44.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2"
   }
 }

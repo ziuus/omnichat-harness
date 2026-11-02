@@ -28,6 +28,7 @@ Commands:
   dev             Start the API server in watch/development mode
   tui             Launch the real-time terminal monitoring dashboard
   init [provider] Launch browser to log into providers (e.g. chatgpt, gemini)
+  mcp             Run standard Model Context Protocol (MCP) stdio server
   test            Run the comprehensive system self-test
   help            Show this help information
 
@@ -81,6 +82,11 @@ switch (command) {
   case 'test':
   case 'self-test':
     runScript(resolve(ROOT, 'scripts/system-self-test.ts'), args);
+    break;
+
+  case 'mcp':
+  case 'mcp-server':
+    runScript(resolve(ROOT, 'bin/mcp-server.js'), args);
     break;
 
   case 'help':
